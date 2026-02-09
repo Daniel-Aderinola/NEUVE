@@ -12,7 +12,7 @@ export default function AboutPage() {
       {/* Hero */}
       <section className="relative h-[60vh] md:h-[70vh] flex items-end overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1920&q=80"
+          src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1920&q=80"
           alt="About NEUVE"
           fill
           className="object-cover"
