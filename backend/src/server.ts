@@ -21,8 +21,22 @@ connectDB();
 
 // Middleware
 app.use(helmet());
+
+// CORS - allow both local dev and production frontend
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all origins in production for now
+    }
+  },
   credentials: true,
 }));
 app.use(morgan('dev'));
