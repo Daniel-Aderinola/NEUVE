@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -15,6 +15,26 @@ export default function HomePage() {
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -100]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const scrollLeft = el.scrollLeft;
+    const cardWidth = el.querySelector('div')?.offsetWidth || 1;
+    const gap = 12; // gap-3 = 12px
+    const index = Math.round(scrollLeft / (cardWidth + gap));
+    setActiveSlide(index);
+  }, []);
+
+  const scrollToSlide = useCallback((index: number) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const cardWidth = el.querySelector('div')?.offsetWidth || 1;
+    const gap = 12;
+    el.scrollTo({ left: index * (cardWidth + gap), behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -186,18 +206,17 @@ export default function HomePage() {
           </div>
 
           {/* Mobile horizontal slider */}
-          <div className="lg:hidden overflow-hidden">
-            <motion.div
-              className="flex gap-3 cursor-grab active:cursor-grabbing"
-              drag="x"
-              dragConstraints={{ right: 0, left: -(categories.slice(0, 3).length * 280 - (typeof window !== 'undefined' ? window.innerWidth - 48 : 300)) }}
-              dragElastic={0.1}
-              dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
+          <div className="lg:hidden">
+            <div
+              ref={sliderRef}
+              onScroll={handleScroll}
+              className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
+              style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {categories.slice(0, 3).map((category, i) => (
                 <motion.div
                   key={category._id}
-                  className="min-w-[75vw] sm:min-w-[60vw]"
+                  className="min-w-[80vw] sm:min-w-[65vw] snap-center flex-shrink-0"
                   initial={{ opacity: 0, x: 40 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
@@ -213,7 +232,7 @@ export default function HomePage() {
                         alt={category.name}
                         fill
                         className="object-cover transition-transform duration-[1.2s] ease-luxury group-hover:scale-110"
-                        sizes="75vw"
+                        sizes="80vw"
                       />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-primary-950/80 via-primary-950/20 to-transparent" />
@@ -228,10 +247,22 @@ export default function HomePage() {
                   </Link>
                 </motion.div>
               ))}
-            </motion.div>
-            <p className="text-[10px] tracking-[0.2em] uppercase text-white/20 mt-4 text-center">
-              Swipe to explore →
-            </p>
+            </div>
+            {/* Dot indicators */}
+            <div className="flex items-center justify-center gap-2 mt-5">
+              {categories.slice(0, 3).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => scrollToSlide(i)}
+                  className={`transition-all duration-300 rounded-full ${
+                    activeSlide === i
+                      ? 'w-6 h-2 bg-white'
+                      : 'w-2 h-2 bg-white/20 hover:bg-white/40'
+                  }`}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
