@@ -52,9 +52,6 @@ export default function RegisterPage() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-10">
-          <Link href="/" className="text-2xl font-display font-bold tracking-[0.15em] uppercase">
-            NEUVE
-          </Link>
           <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight mt-8 mb-2">
             Create Account
           </h1>
