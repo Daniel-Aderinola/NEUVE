@@ -60,9 +60,7 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              <p className="text-xs tracking-[0.3em] uppercase text-white/40 mb-6">
-                New Collection — SS26
-              </p>
+            
             </motion.div>
 
             <motion.h1
