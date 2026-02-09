@@ -7,6 +7,7 @@ A full-stack e-commerce website with a dark, editorial fashion aesthetic. Built 
 ## Tech Stack
 
 ### Frontend
+
 - **Next.js 14** (App Router, SSR, SEO)
 - **TypeScript**
 - **Tailwind CSS** (custom luxury theme)
@@ -14,6 +15,7 @@ A full-stack e-commerce website with a dark, editorial fashion aesthetic. Built 
 - **Lucide React** (icons)
 
 ### Backend
+
 - **Node.js** + **Express.js**
 - **TypeScript**
 - **MongoDB** + **Mongoose**
@@ -37,6 +39,7 @@ A full-stack e-commerce website with a dark, editorial fashion aesthetic. Built 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - MongoDB (local or Atlas)
 - Stripe account (for payments)
@@ -56,6 +59,7 @@ npm install
 ### 2. Configure Environment
 
 **Backend** (`backend/.env`):
+
 ```
 PORT=5000
 NODE_ENV=development
@@ -68,6 +72,7 @@ CLIENT_URL=http://localhost:3000
 ```
 
 **Frontend** (`frontend/.env.local`):
+
 ```
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 NEXT_PUBLIC_STRIPE_KEY=pk_test_...
@@ -81,6 +86,7 @@ npm run seed
 ```
 
 This creates demo data including:
+
 - **Admin**: admin@neuve.com / admin123
 - **User**: user@neuve.com / user123
 - 6 categories + 12 products
@@ -102,22 +108,23 @@ npm run dev
 
 ## Pages
 
-| Page | Path | Description |
-|------|------|-------------|
-| Home | `/` | Hero, collections, featured products, editorial |
-| Shop | `/shop` | Product grid with filters & sorting |
-| Product | `/product/[slug]` | Product details, image gallery, add to cart |
-| Cart | `/cart` | Shopping bag management |
-| Checkout | `/checkout` | Shipping form + Stripe payment |
-| Login | `/login` | Sign in |
-| Register | `/register` | Create account |
-| Dashboard | `/dashboard` | User orders & profile |
-| Admin | `/admin` | Product/order/user management |
-| About | `/about` | Brand story & values |
+| Page      | Path              | Description                                     |
+| --------- | ----------------- | ----------------------------------------------- |
+| Home      | `/`               | Hero, collections, featured products, editorial |
+| Shop      | `/shop`           | Product grid with filters & sorting             |
+| Product   | `/product/[slug]` | Product details, image gallery, add to cart     |
+| Cart      | `/cart`           | Shopping bag management                         |
+| Checkout  | `/checkout`       | Shipping form + Stripe payment                  |
+| Login     | `/login`          | Sign in                                         |
+| Register  | `/register`       | Create account                                  |
+| Dashboard | `/dashboard`      | User orders & profile                           |
+| Admin     | `/admin`          | Product/order/user management                   |
+| About     | `/about`          | Brand story & values                            |
 
 ## API Endpoints
 
 ### Auth
+
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
@@ -125,6 +132,7 @@ npm run dev
 - `PUT /api/auth/profile`
 
 ### Products
+
 - `GET /api/products`
 - `GET /api/products/featured`
 - `GET /api/products/slug/:slug`
@@ -132,18 +140,21 @@ npm run dev
 - `GET /api/products/:id/related`
 
 ### Cart
+
 - `GET /api/cart`
 - `POST /api/cart/add`
 - `PUT /api/cart/item/:itemId`
 - `DELETE /api/cart/item/:itemId`
 
 ### Orders
+
 - `POST /api/orders`
 - `POST /api/orders/checkout-session`
 - `GET /api/orders/my-orders`
 - `GET /api/orders/:id`
 
 ### Admin
+
 - `GET /api/auth/users` (admin)
 - `POST /api/products` (admin)
 - `PUT /api/products/:id` (admin)
