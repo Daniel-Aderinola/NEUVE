@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -17,17 +17,32 @@ export default function CheckoutPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: user?.name || '',
-    street: user?.address?.street || '',
-    city: user?.address?.city || '',
-    state: user?.address?.state || '',
-    zipCode: user?.address?.zipCode || '',
-    country: user?.address?.country || '',
-    phone: user?.phone || '',
+    fullName: '',
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: '',
+    phone: '',
   });
 
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    } else {
+      setFormData({
+        fullName: user.name || '',
+        street: user.address?.street || '',
+        city: user.address?.city || '',
+        state: user.address?.state || '',
+        zipCode: user.address?.zipCode || '',
+        country: user.address?.country || '',
+        phone: user.phone || '',
+      });
+    }
+  }, [user, router]);
+
   if (!user) {
-    router.push('/login');
     return null;
   }
 
