@@ -206,12 +206,12 @@ export default function ProductPage() {
                 <p className="text-xs tracking-[0.2em] uppercase text-white/30 mb-3">
                   Color — <span className="text-white/60">{selectedColor}</span>
                 </p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {product.colors.map((color) => (
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
-                      className={`px-4 py-2 text-xs tracking-wider border transition-all ${
+                      className={`px-3 sm:px-4 py-2 text-xs tracking-wider border transition-all ${
                         selectedColor === color
                           ? 'border-white text-white'
                           : 'border-white/10 text-white/40 hover:border-white/30'
@@ -250,7 +250,7 @@ export default function ProductPage() {
 
             {/* Quantity + Add to cart */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="flex items-center border border-white/10">
+              <div className="flex items-center border border-white/10 self-start">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="p-3 text-white/40 hover:text-white transition-colors"
@@ -266,17 +266,18 @@ export default function ProductPage() {
                 </button>
               </div>
 
-              <button
-                onClick={handleAddToCart}
-                disabled={product.stock === 0}
-                className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium tracking-[0.1em] uppercase transition-all duration-500 ${
-                  product.stock === 0
-                    ? 'bg-primary-800 text-white/30 cursor-not-allowed'
-                    : added
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white text-primary-950 hover:bg-primary-200'
-                }`}
-              >
+              <div className="flex gap-3 flex-1">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={product.stock === 0}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium tracking-[0.1em] uppercase transition-all duration-500 ${
+                    product.stock === 0
+                      ? 'bg-primary-800 text-white/30 cursor-not-allowed'
+                      : added
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-primary-950 hover:bg-primary-200'
+                  }`}
+                >
                 {added ? (
                   <>
                     <Check className="w-4 h-4" />
@@ -292,9 +293,10 @@ export default function ProductPage() {
                 )}
               </button>
 
-              <button className="p-3.5 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all">
-                <Heart className="w-4 h-4" />
-              </button>
+                <button className="p-3.5 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all">
+                  <Heart className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Stock info */}

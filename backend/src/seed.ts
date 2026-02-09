@@ -121,7 +121,7 @@ const seedData = async () => {
         comparePrice: 450,
         images: [
           'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800',
-          'https://images.unsplash.com/photo-1434389677669-e08b4cda3a23?w=800',
+          'https://images.unsplash.com/photo-1608234808654-2a8875faa7fd?w=800',
         ],
         category: categories[0]._id,
         sizes: ['S', 'M', 'L', 'XL'],
@@ -272,8 +272,8 @@ const seedData = async () => {
         price: 135,
         comparePrice: 165,
         images: [
-          'https://images.unsplash.com/photo-1598033129183-c4f50c736c10?w=800',
           'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=800',
+          'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800',
         ],
         category: categories[0]._id,
         sizes: ['XS', 'S', 'M', 'L', 'XL'],

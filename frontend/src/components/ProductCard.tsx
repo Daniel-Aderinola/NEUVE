@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -12,6 +12,9 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
+  const [imgError, setImgError] = useState(false);
+  const imgSrc = imgError ? 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800' : product.images[0];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -23,11 +26,12 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         {/* Image */}
         <div className="relative aspect-[3/4] overflow-hidden bg-primary-900 mb-4">
           <Image
-            src={product.images[0]}
+            src={imgSrc}
             alt={product.name}
             fill
             className="object-cover transition-transform duration-700 ease-luxury group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            onError={() => setImgError(true)}
           />
           {/* Hover overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
