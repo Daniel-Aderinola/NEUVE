@@ -149,7 +149,7 @@ export default function HomePage() {
             </Link>
           </motion.div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
+          <div className="lg:grid lg:grid-cols-3 lg:gap-5 hidden">
             {categories.slice(0, 3).map((category, i) => (
               <motion.div
                 key={category._id}
@@ -168,7 +168,7 @@ export default function HomePage() {
                       alt={category.name}
                       fill
                       className="object-cover transition-transform duration-[1.2s] ease-luxury group-hover:scale-110"
-                      sizes="(max-width: 1024px) 50vw, 33vw"
+                      sizes="33vw"
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-primary-950/80 via-primary-950/20 to-transparent" />
@@ -183,6 +183,55 @@ export default function HomePage() {
                 </Link>
               </motion.div>
             ))}
+          </div>
+
+          {/* Mobile horizontal slider */}
+          <div className="lg:hidden overflow-hidden">
+            <motion.div
+              className="flex gap-3 cursor-grab active:cursor-grabbing"
+              drag="x"
+              dragConstraints={{ right: 0, left: -(categories.slice(0, 3).length * 280 - (typeof window !== 'undefined' ? window.innerWidth - 48 : 300)) }}
+              dragElastic={0.1}
+              dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
+            >
+              {categories.slice(0, 3).map((category, i) => (
+                <motion.div
+                  key={category._id}
+                  className="min-w-[75vw] sm:min-w-[60vw]"
+                  initial={{ opacity: 0, x: 40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: i * 0.1 }}
+                >
+                  <Link
+                    href={`/shop?category=${category._id}`}
+                    className="group relative block aspect-[3/4] overflow-hidden bg-primary-900"
+                  >
+                    {category.image && (
+                      <Image
+                        src={category.image}
+                        alt={category.name}
+                        fill
+                        className="object-cover transition-transform duration-[1.2s] ease-luxury group-hover:scale-110"
+                        sizes="75vw"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary-950/80 via-primary-950/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 p-6">
+                      <p className="text-[10px] tracking-[0.3em] uppercase text-white/40 mb-2">
+                        {category.description}
+                      </p>
+                      <h3 className="text-lg font-display font-bold tracking-tight">
+                        {category.name}
+                      </h3>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+            <p className="text-[10px] tracking-[0.2em] uppercase text-white/20 mt-4 text-center">
+              Swipe to explore →
+            </p>
           </div>
         </div>
       </section>
