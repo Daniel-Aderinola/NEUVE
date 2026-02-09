@@ -24,8 +24,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      // Only clear auth if it's a login/profile request, not admin dashboard calls
+      const url = error.config?.url || '';
+      if (url.includes('/auth/login') || url.includes('/auth/profile') || url.includes('/auth/register')) {
+        // Don't clear on login failure
+      } else if (!url.includes('/orders/stats') && !url.includes('/admin')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
     return Promise.reject(error);
   }

@@ -16,12 +16,12 @@ const router = Router();
 
 router.get('/', getProducts);
 router.get('/featured', getFeaturedProducts);
+router.get('/admin/all', protect, admin, adminGetProducts);
 router.get('/slug/:slug', getProductBySlug);
 router.get('/:id', getProductById);
 router.get('/:id/related', getRelatedProducts);
 
 // Admin routes
-router.get('/admin/all', protect, admin, adminGetProducts);
 router.post('/', protect, admin, createProduct);
 router.put('/:id', protect, admin, updateProduct);
 router.delete('/:id', protect, admin, deleteProduct);

@@ -43,20 +43,31 @@ export default function AdminPage() {
   const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const [statsRes, productsRes, categoriesRes, ordersRes, usersRes] = await Promise.all([
-        orderAPI.getStats(),
+      const [productsRes, categoriesRes] = await Promise.all([
         productAPI.adminGetAll(),
         categoryAPI.getAll(),
-        orderAPI.getAll(),
-        authAPI.getUsers(),
       ]);
-      setStats(statsRes.data);
-      setProducts(productsRes.data.products);
-      setCategories(categoriesRes.data);
-      setOrders(ordersRes.data.orders);
-      setUsers(usersRes.data.users);
-    } catch (error) {
+      setProducts(productsRes.data?.products || []);
+      setCategories(categoriesRes.data || []);
+
+      // These may fail if no orders exist yet — handle gracefully
+      try {
+        const statsRes = await orderAPI.getStats();
+        setStats(statsRes.data);
+      } catch { setStats(null); }
+
+      try {
+        const ordersRes = await orderAPI.getAll();
+        setOrders(ordersRes.data?.orders || []);
+      } catch { setOrders([]); }
+
+      try {
+        const usersRes = await authAPI.getUsers();
+        setUsers(usersRes.data?.users || []);
+      } catch { setUsers([]); }
+    } catch (error: any) {
       console.error('Error:', error);
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -225,15 +236,15 @@ export default function AdminPage() {
             ) : (
               <>
                 {/* DASHBOARD TAB */}
-                {activeTab === 'dashboard' && stats && (
+                {activeTab === 'dashboard' && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     {/* Stats cards */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
                       {[
-                        { label: 'Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'text-green-400' },
-                        { label: 'Orders', value: stats.totalOrders, icon: ShoppingBag, color: 'text-blue-400' },
-                        { label: 'Products', value: stats.totalProducts, icon: Package, color: 'text-purple-400' },
-                        { label: 'Pending', value: stats.pendingOrders, icon: BarChart3, color: 'text-yellow-400' },
+                        { label: 'Revenue', value: `$${(stats?.totalRevenue || 0).toLocaleString()}`, icon: DollarSign, color: 'text-green-400' },
+                        { label: 'Orders', value: stats?.totalOrders || 0, icon: ShoppingBag, color: 'text-blue-400' },
+                        { label: 'Products', value: stats?.totalProducts || products.length, icon: Package, color: 'text-purple-400' },
+                        { label: 'Pending', value: stats?.pendingOrders || 0, icon: BarChart3, color: 'text-yellow-400' },
                       ].map((stat, i) => (
                         <div key={i} className="border border-white/5 p-5">
                           <div className="flex items-center justify-between mb-3">
@@ -247,6 +258,7 @@ export default function AdminPage() {
 
                     {/* Recent Orders */}
                     <h3 className="text-sm tracking-[0.15em] uppercase font-medium mb-4">Recent Orders</h3>
+                    {stats?.recentOrders && stats.recentOrders.length > 0 ? (
                     <div className="border border-white/5 divide-y divide-white/5">
                       {stats.recentOrders.map((order) => (
                         <div key={order._id} className="flex items-center justify-between p-4">
@@ -265,6 +277,11 @@ export default function AdminPage() {
                         </div>
                       ))}
                     </div>
+                    ) : (
+                      <div className="border border-white/5 p-8 text-center">
+                        <p className="text-sm text-white/30">No orders yet</p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
 
