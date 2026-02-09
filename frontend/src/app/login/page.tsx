@@ -108,13 +108,6 @@ export default function LoginPage() {
             Create one
           </Link>
         </p>
-
-        {/* Demo credentials */}
-        <div className="mt-8 p-4 border border-white/5 text-center">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-white/20 mb-2">Demo Credentials</p>
-          <p className="text-xs text-white/30">Admin: admin@neuve.com / admin123</p>
-          <p className="text-xs text-white/30">User: user@neuve.com / user123</p>
-        </div>
       </motion.div>
     </div>
   );
