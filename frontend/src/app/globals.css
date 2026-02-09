@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -81,7 +81,11 @@
   }
 
   .overlay-gradient {
-    background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 10, 0.8) 100%);
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(10, 10, 10, 0.8) 100%
+    );
   }
 
   .glass-effect {
@@ -98,10 +102,22 @@
     animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
-  .animate-stagger > *:nth-child(1) { animation-delay: 0s; }
-  .animate-stagger > *:nth-child(2) { animation-delay: 0.1s; }
-  .animate-stagger > *:nth-child(3) { animation-delay: 0.2s; }
-  .animate-stagger > *:nth-child(4) { animation-delay: 0.3s; }
-  .animate-stagger > *:nth-child(5) { animation-delay: 0.4s; }
-  .animate-stagger > *:nth-child(6) { animation-delay: 0.5s; }
+  .animate-stagger > *:nth-child(1) {
+    animation-delay: 0s;
+  }
+  .animate-stagger > *:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  .animate-stagger > *:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .animate-stagger > *:nth-child(4) {
+    animation-delay: 0.3s;
+  }
+  .animate-stagger > *:nth-child(5) {
+    animation-delay: 0.4s;
+  }
+  .animate-stagger > *:nth-child(6) {
+    animation-delay: 0.5s;
+  }
 }
