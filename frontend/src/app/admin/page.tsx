@@ -17,7 +17,7 @@ type Tab = 'dashboard' | 'products' | 'orders' | 'users' | 'categories';
 
 export default function AdminPage() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -33,12 +33,13 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to initialize
     if (!user || user.role !== 'admin') {
       router.push('/login');
       return;
     }
     fetchDashboard();
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const fetchDashboard = async () => {
     try {
@@ -179,7 +180,7 @@ export default function AdminPage() {
     { id: 'categories', label: 'Categories', icon: BarChart3 },
   ];
 
-  if (!user || user.role !== 'admin') return null;
+  if (authLoading || !user || user.role !== 'admin') return null;
 
   return (
     <div className="pt-20 md:pt-24 pb-20">

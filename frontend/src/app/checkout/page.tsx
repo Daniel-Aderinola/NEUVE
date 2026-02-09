@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -27,6 +27,7 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push('/login');
     } else {
@@ -40,9 +41,9 @@ export default function CheckoutPage() {
         phone: user.phone || '',
       });
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
-  if (!user) {
+  if (authLoading || !user) {
     return null;
   }
 

@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, logout, updateUser } = useAuth();
+  const { user, loading: authLoading, logout, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'settings'>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +27,7 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to initialize
     if (!user) {
       router.push('/login');
       return;
@@ -53,7 +54,7 @@ export default function DashboardPage() {
       }
     };
     fetchOrders();
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +90,7 @@ export default function DashboardPage() {
     cancelled: 'text-red-400 bg-red-400/10',
   };
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
 
   const tabs = [
     { id: 'orders' as const, label: 'Orders', icon: Package },
