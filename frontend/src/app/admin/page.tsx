@@ -42,36 +42,50 @@ export default function AdminPage() {
   }, [user, authLoading, router]);
 
   const fetchDashboard = async () => {
+    setLoading(true);
+
+    // Fetch each independently — never let one failure break the others
     try {
-      setLoading(true);
-      const [productsRes, categoriesRes] = await Promise.all([
-        productAPI.adminGetAll(),
-        categoryAPI.getAll(),
-      ]);
+      const productsRes = await productAPI.adminGetAll();
       setProducts(productsRes.data?.products || []);
-      setCategories(categoriesRes.data || []);
-
-      // These may fail if no orders exist yet — handle gracefully
-      try {
-        const statsRes = await orderAPI.getStats();
-        setStats(statsRes.data);
-      } catch { setStats(null); }
-
-      try {
-        const ordersRes = await orderAPI.getAll();
-        setOrders(ordersRes.data?.orders || []);
-      } catch { setOrders([]); }
-
-      try {
-        const usersRes = await authAPI.getUsers();
-        setUsers(usersRes.data?.users || []);
-      } catch { setUsers([]); }
-    } catch (error: any) {
-      console.error('Error:', error);
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error('Failed to load products:', e);
+      setProducts([]);
     }
+
+    try {
+      const categoriesRes = await categoryAPI.getAll();
+      setCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data : []);
+    } catch (e) {
+      console.error('Failed to load categories:', e);
+      setCategories([]);
+    }
+
+    try {
+      const statsRes = await orderAPI.getStats();
+      setStats(statsRes.data || null);
+    } catch (e) {
+      console.error('Failed to load stats:', e);
+      setStats(null);
+    }
+
+    try {
+      const ordersRes = await orderAPI.getAll();
+      setOrders(ordersRes.data?.orders || []);
+    } catch (e) {
+      console.error('Failed to load orders:', e);
+      setOrders([]);
+    }
+
+    try {
+      const usersRes = await authAPI.getUsers();
+      setUsers(usersRes.data?.users || []);
+    } catch (e) {
+      console.error('Failed to load users:', e);
+      setUsers([]);
+    }
+
+    setLoading(false);
   };
 
   const openProductModal = (product?: Product) => {
@@ -262,18 +276,18 @@ export default function AdminPage() {
                     {stats?.recentOrders && stats.recentOrders.length > 0 ? (
                     <div className="border border-white/5 divide-y divide-white/5">
                       {stats.recentOrders.map((order) => (
-                        <div key={order._id} className="flex items-center justify-between p-4">
+                        <div key={order?._id || Math.random()} className="flex items-center justify-between p-4">
                           <div>
-                            <p className="text-sm font-medium">#{order._id.slice(-8).toUpperCase()}</p>
+                            <p className="text-sm font-medium">#{(order?._id || '').slice(-8).toUpperCase()}</p>
                             <p className="text-xs text-white/30 mt-0.5">
-                              {typeof order.user === 'object' ? order.user.name : 'Unknown'}
+                              {typeof order?.user === 'object' ? order.user?.name : 'Unknown'}
                             </p>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className={`px-2 py-0.5 text-[10px] tracking-wider uppercase font-medium ${statusColors[order.status]}`}>
-                              {order.status}
+                            <span className={`px-2 py-0.5 text-[10px] tracking-wider uppercase font-medium ${statusColors[order?.status] || ''}`}>
+                              {order?.status || 'unknown'}
                             </span>
-                            <span className="text-sm">${order.totalPrice.toFixed(2)}</span>
+                            <span className="text-sm">${(order?.totalPrice ?? 0).toFixed(2)}</span>
                           </div>
                         </div>
                       ))}
@@ -345,22 +359,22 @@ export default function AdminPage() {
 
                     <div className="border border-white/5 divide-y divide-white/5">
                       {orders.map((order) => (
-                        <div key={order._id} className="p-4 hover:bg-white/[0.02] transition-colors">
+                        <div key={order?._id || Math.random()} className="p-4 hover:bg-white/[0.02] transition-colors">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
                               <div className="flex items-center gap-3">
-                                <p className="text-sm font-medium">#{order._id.slice(-8).toUpperCase()}</p>
-                                <span className={`px-2 py-0.5 text-[10px] tracking-wider uppercase font-medium ${statusColors[order.status]}`}>
-                                  {order.status}
+                                <p className="text-sm font-medium">#{(order?._id || '').slice(-8).toUpperCase()}</p>
+                                <span className={`px-2 py-0.5 text-[10px] tracking-wider uppercase font-medium ${statusColors[order?.status] || ''}`}>
+                                  {order?.status || 'unknown'}
                                 </span>
                               </div>
                               <p className="text-xs text-white/30 mt-1">
-                                {typeof order.user === 'object' ? order.user.email : ''} · {new Date(order.createdAt).toLocaleDateString()}
+                                {typeof order?.user === 'object' ? order.user?.email : ''} · {order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}
                               </p>
                             </div>
                             <div className="flex items-center gap-3">
                               <select
-                                value={order.status}
+                                value={order?.status || 'pending'}
                                 onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
                                 className="bg-transparent border border-white/10 px-3 py-1.5 text-xs text-white/70 focus:outline-none"
                               >
@@ -370,7 +384,7 @@ export default function AdminPage() {
                                 <option value="delivered" className="bg-primary-950">Delivered</option>
                                 <option value="cancelled" className="bg-primary-950">Cancelled</option>
                               </select>
-                              <span className="text-sm font-medium">${order.totalPrice.toFixed(2)}</span>
+                              <span className="text-sm font-medium">${(order?.totalPrice ?? 0).toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
