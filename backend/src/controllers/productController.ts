@@ -58,21 +58,21 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
       console.log('Database unavailable, using mock data');
       // Fallback to mock data
       let filtered = [...mockProducts];
-      
+
       // Apply featured filter
       if (req.query.featured === 'true') {
         filtered = filtered.filter(p => p.featured);
       }
-      
+
       // Apply search
       if (req.query.search) {
         const searchTerm = (req.query.search as string).toLowerCase();
-        filtered = filtered.filter(p => 
-          p.name.toLowerCase().includes(searchTerm) || 
+        filtered = filtered.filter(p =>
+          p.name.toLowerCase().includes(searchTerm) ||
           p.description.toLowerCase().includes(searchTerm)
         );
       }
-      
+
       // Apply price filter
       if (req.query.minPrice) {
         filtered = filtered.filter(p => p.price >= Number(req.query.minPrice));
@@ -80,10 +80,10 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
       if (req.query.maxPrice) {
         filtered = filtered.filter(p => p.price <= Number(req.query.maxPrice));
       }
-      
+
       const total = filtered.length;
       const products = filtered.slice(skip, skip + limit);
-      
+
       res.json({
         products,
         page,
