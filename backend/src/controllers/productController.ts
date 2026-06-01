@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Product from '../models/Product';
 import { AuthRequest } from '../middleware/auth';
+import { mockProducts, mockCategories } from '../mockData';
 
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -38,20 +39,58 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
     else if (req.query.sort === 'newest') sort = { createdAt: -1 };
     else if (req.query.sort === 'rating') sort = { rating: -1 };
 
-    const products = await Product.find(filter)
-      .populate('category', 'name slug')
-      .skip(skip)
-      .limit(limit)
-      .sort(sort);
+    try {
+      const products = await Product.find(filter)
+        .populate('category', 'name slug')
+        .skip(skip)
+        .limit(limit)
+        .sort(sort);
 
-    const total = await Product.countDocuments(filter);
+      const total = await Product.countDocuments(filter);
 
-    res.json({
-      products,
-      page,
-      pages: Math.ceil(total / limit),
-      total,
-    });
+      res.json({
+        products,
+        page,
+        pages: Math.ceil(total / limit),
+        total,
+      });
+    } catch (dbError: any) {
+      console.log('Database unavailable, using mock data');
+      // Fallback to mock data
+      let filtered = [...mockProducts];
+      
+      // Apply featured filter
+      if (req.query.featured === 'true') {
+        filtered = filtered.filter(p => p.featured);
+      }
+      
+      // Apply search
+      if (req.query.search) {
+        const searchTerm = (req.query.search as string).toLowerCase();
+        filtered = filtered.filter(p => 
+          p.name.toLowerCase().includes(searchTerm) || 
+          p.description.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // Apply price filter
+      if (req.query.minPrice) {
+        filtered = filtered.filter(p => p.price >= Number(req.query.minPrice));
+      }
+      if (req.query.maxPrice) {
+        filtered = filtered.filter(p => p.price <= Number(req.query.maxPrice));
+      }
+      
+      const total = filtered.length;
+      const products = filtered.slice(skip, skip + limit);
+      
+      res.json({
+        products,
+        page,
+        pages: Math.ceil(total / limit),
+        total,
+      });
+    }
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

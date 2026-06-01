@@ -1,9 +1,12 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import connectDB from './config/db';
 import authRoutes from './routes/authRoutes';
 import productRoutes from './routes/productRoutes';
@@ -11,8 +14,6 @@ import categoryRoutes from './routes/categoryRoutes';
 import cartRoutes from './routes/cartRoutes';
 import orderRoutes from './routes/orderRoutes';
 import { errorHandler, notFound } from './middleware/errorHandler';
-
-dotenv.config();
 
 const app = express();
 
