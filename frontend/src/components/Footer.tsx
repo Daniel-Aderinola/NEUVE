@@ -86,7 +86,8 @@ const Footer = () => {
         </div>
 
         {/* Bottom section */}
-        <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/5 gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-between pt-8 gap-4 relative">
+          <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-blue-500 via-purple-500 to-purple-400"></div>
           <p className="text-xs text-white/30 tracking-wider">
             &copy; {currentYear} NEUVE. All rights reserved.
           </p>
