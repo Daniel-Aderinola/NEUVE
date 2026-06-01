@@ -22,35 +22,35 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    name: { 
-      type: String, 
+    name: {
+      type: String,
       required: [true, 'Name is required'],
       trim: true,
       minlength: [2, 'Name must be at least 2 characters'],
       maxlength: [100, 'Name cannot exceed 100 characters'],
     },
-    email: { 
-      type: String, 
+    email: {
+      type: String,
       required: [true, 'Email is required'],
-      unique: true, 
-      lowercase: true, 
+      unique: true,
+      lowercase: true,
       trim: true,
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email format'],
     },
-    password: { 
-      type: String, 
+    password: {
+      type: String,
       required: [true, 'Password is required'],
       minlength: [12, 'Password must be at least 12 characters'],
       select: false, // Don't return password by default
     },
-    role: { 
-      type: String, 
-      enum: ['user', 'admin'], 
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
       default: 'user',
       immutable: true, // Cannot change role after creation
     },
     avatar: { type: String },
-    phone: { 
+    phone: {
       type: String,
       match: [/^\+?[0-9]{10,15}$/, 'Invalid phone number'],
     },

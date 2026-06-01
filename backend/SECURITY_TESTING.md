@@ -6,10 +6,10 @@ Update `src/lib/api.ts` and auth context to use `accessToken` instead of `token`
 
 ```typescript
 // OLD
-localStorage.getItem('token')
+localStorage.getItem("token");
 
 // NEW
-document.cookie.split(';').find(c => c.trim().startsWith('accessToken='))
+document.cookie.split(";").find((c) => c.trim().startsWith("accessToken="));
 // OR just rely on httpOnly cookie (recommended)
 ```
 
@@ -47,7 +47,7 @@ for i in {1..4}; do curl -X POST http://localhost:5001/api/auth/register; done
 
 ```
 ✅ Access token expires: 1 hour
-✅ Refresh token expires: 7 days  
+✅ Refresh token expires: 7 days
 ✅ Expired token returns: 401 "Token expired"
 ❌ Invalid token returns: 401 "Invalid token"
 ```
