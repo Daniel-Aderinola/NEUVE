@@ -3,30 +3,86 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 
+// Password validation helper
+const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  
+  if (password.length < 12) errors.push('Password must be at least 12 characters');
+  if (!/[A-Z]/.test(password)) errors.push('Password must contain uppercase letter');
+  if (!/[a-z]/.test(password)) errors.push('Password must contain lowercase letter');
+  if (!/[0-9]/.test(password)) errors.push('Password must contain number');
+  if (!/[@$!%*?&]/.test(password)) errors.push('Password must contain special character (@$!%*?&)');
+  
+  return { valid: errors.length === 0, errors };
+};
+
 const generateToken = (id: string): string => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'fallbacksecret', {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET not configured');
+  }
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '1h', // Reduced from 7d for access token
+  });
+};
+
+// Generate refresh token (longer expiry)
+const generateRefreshToken = (id: string): string => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET not configured');
+  }
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '7d',
   });
 };
 
 export const register = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      res.status(400).json({ message: 'User already exists' });
+    // Input validation
+    if (!name || !email || !password) {
+      res.status(400).json({ message: 'Name, email, and password are required' });
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      res.status(400).json({ message: 'Passwords do not match' });
       return;
     }
 
-    const user = await User.create({ name, email, password });
-    const token = generateToken(user._id.toString());
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      res.status(400).json({ message: 'Password does not meet requirements', errors: passwordValidation.errors });
+      return;
+    }
 
-    res.cookie('token', token, {
+    // Check if user exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      res.status(400).json({ message: 'Email already registered' });
+      return;
+    }
+
+    const user = await User.create({ name: name.trim(), email: email.toLowerCase(), password });
+    const accessToken = generateToken(user._id.toString());
+    const refreshToken = generateRefreshToken(user._id.toString());
+
+    // Set secure cookies
+    res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: '/',
+    });
+    
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
     });
 
     res.status(201).json({
@@ -34,10 +90,11 @@ export const register = async (req: AuthRequest, res: Response): Promise<void> =
       name: user.name,
       email: user.email,
       role: user.role,
-      token,
+      accessToken,
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    console.error('Registration error:', error.message);
+    res.status(500).json({ message: 'Registration failed' });
   }
 };
 
@@ -45,19 +102,36 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).select('+password');
-    if (!user || !(await user.comparePassword(password))) {
-      res.status(401).json({ message: 'Invalid email or password' });
+    // Input validation
+    if (!email || !password) {
+      res.status(400).json({ message: 'Email and password are required' });
       return;
     }
 
-    const token = generateToken(user._id.toString());
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    if (!user || !(await user.comparePassword(password))) {
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
+    }
 
-    res.cookie('token', token, {
+    const accessToken = generateToken(user._id.toString());
+    const refreshToken = generateRefreshToken(user._id.toString());
+
+    // Set secure cookies
+    res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: '/',
+    });
+    
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
     });
 
     res.json({
@@ -65,15 +139,18 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token,
+      accessToken,
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error.message);
+    res.status(500).json({ message: 'Login failed' });
   }
 };
 
 export const logout = async (req: AuthRequest, res: Response): Promise<void> => {
-  res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
+  // Clear all auth cookies
+  res.clearCookie('accessToken', { httpOnly: true, path: '/' });
+  res.clearCookie('refreshToken', { httpOnly: true, path: '/' });
   res.json({ message: 'Logged out successfully' });
 };
 

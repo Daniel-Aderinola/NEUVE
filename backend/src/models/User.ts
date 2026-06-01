@@ -22,18 +22,44 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 6, select: false },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    name: { 
+      type: String, 
+      required: [true, 'Name is required'],
+      trim: true,
+      minlength: [2, 'Name must be at least 2 characters'],
+      maxlength: [100, 'Name cannot exceed 100 characters'],
+    },
+    email: { 
+      type: String, 
+      required: [true, 'Email is required'],
+      unique: true, 
+      lowercase: true, 
+      trim: true,
+      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email format'],
+    },
+    password: { 
+      type: String, 
+      required: [true, 'Password is required'],
+      minlength: [12, 'Password must be at least 12 characters'],
+      select: false, // Don't return password by default
+    },
+    role: { 
+      type: String, 
+      enum: ['user', 'admin'], 
+      default: 'user',
+      immutable: true, // Cannot change role after creation
+    },
     avatar: { type: String },
-    phone: { type: String },
+    phone: { 
+      type: String,
+      match: [/^\+?[0-9]{10,15}$/, 'Invalid phone number'],
+    },
     address: {
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
-      country: String,
+      street: { type: String, maxlength: 255 },
+      city: { type: String, maxlength: 100 },
+      state: { type: String, maxlength: 100 },
+      zipCode: { type: String, match: [/^[0-9]{5,10}$/, 'Invalid zip code'] },
+      country: { type: String, maxlength: 100 },
     },
   },
   { timestamps: true }

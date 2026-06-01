@@ -16,7 +16,20 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const validatePassword = (pwd: string) => {
+    const errors = [];
+    if (pwd.length < 12) errors.push('At least 12 characters');
+    if (!/[A-Z]/.test(pwd)) errors.push('One uppercase letter');
+    if (!/[a-z]/.test(pwd)) errors.push('One lowercase letter');
+    if (!/[0-9]/.test(pwd)) errors.push('One number');
+    if (!/[@$!%*?&]/.test(pwd)) errors.push('One special character (@$!%*?&)');
+    return errors;
+  };
+
+  const passwordErrors = password ? validatePassword(password) : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,18 +39,20 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    const errors = validatePassword(password);
+    if (errors.length > 0) {
+      toast.error(`Password must have: ${errors.join(', ')}`);
       return;
     }
 
     try {
       setLoading(true);
-      await register(name, email, password);
+      await register(name, email, password, confirmPassword);
       toast.success('Account created successfully!');
       router.push('/');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      const errorMessage = error.response?.data?.message || error.response?.data?.errors?.[0] || 'Registration failed';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -85,15 +100,15 @@ export default function RegisterPage() {
 
           <div>
             <label className="text-xs text-white/30 mb-1.5 block">Password</label>
+            <p className="text-xs text-white/40 mb-2">Must include 12+ characters, uppercase, lowercase, number, and special character (@$!%*?&)</p>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-luxury pr-10"
-                placeholder="Min. 6 characters"
+                placeholder="SecurePass123!@"
                 required
-                minLength={6}
               />
               <button
                 type="button"
@@ -103,18 +118,44 @@ export default function RegisterPage() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            {password && passwordErrors.length > 0 && (
+              <div className="mt-2 text-xs text-red-400 space-y-1">
+                <p>Password needs:</p>
+                {passwordErrors.map((error) => (
+                  <p key={error}>• {error}</p>
+                ))}
+              </div>
+            )}
+            {password && passwordErrors.length === 0 && (
+              <p className="mt-2 text-xs text-green-400">✓ Password strength: Strong</p>
+            )}
           </div>
 
           <div>
             <label className="text-xs text-white/30 mb-1.5 block">Confirm Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="input-luxury"
-              placeholder="••••••••"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="input-luxury pr-10"
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {confirmPassword && password !== confirmPassword && (
+              <p className="mt-2 text-xs text-red-400">Passwords do not match</p>
+            )}
+            {confirmPassword && password === confirmPassword && (
+              <p className="mt-2 text-xs text-green-400">✓ Passwords match</p>
+            )}
           </div>
 
           <button

@@ -1,29 +1,22 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
+  withCredentials: true, // Automatically sends httpOnly cookies
 });
 
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
-// Handle auth errors — do NOT auto-clear localStorage.
-// Let each page/component handle 401s via their own catch blocks.
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Let each page/component handle auth errors via their own catch blocks
+    if (error.response?.status === 401) {
+      // Token expired or invalid - user will be logged out by AuthContext
+      console.warn('Authentication token expired or invalid');
+    }
     return Promise.reject(error);
   }
 );
@@ -32,7 +25,7 @@ export default api;
 
 // Auth API
 export const authAPI = {
-  register: (data: { name: string; email: string; password: string }) =>
+  register: (data: { name: string; email: string; password: string; confirmPassword: string }) =>
     api.post('/auth/register', data),
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data),

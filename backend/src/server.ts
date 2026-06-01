@@ -1,6 +1,14 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Validate required environment variables
+const requiredEnvVars = ['JWT_SECRET', 'MONGODB_URI', 'CLIENT_URL'];
+requiredEnvVars.forEach((varName) => {
+  if (!process.env[varName]) {
+    console.error(`❌ Missing required environment variable: ${varName}`);
+    process.exit(1);
+  }
+});
 
 import express from 'express';
 import cors from 'cors';
@@ -14,6 +22,7 @@ import categoryRoutes from './routes/categoryRoutes';
 import cartRoutes from './routes/cartRoutes';
 import orderRoutes from './routes/orderRoutes';
 import { errorHandler, notFound } from './middleware/errorHandler';
+import { apiLimiter } from './middleware/rateLimiter';
 
 const app = express();
 
@@ -21,9 +30,23 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(helmet());
+// Enhanced security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
 
-// CORS - allow both local dev and production frontend
+// CORS - Strict whitelist
 const allowedOrigins = [
   'http://localhost:3000',
   process.env.CLIENT_URL,
@@ -31,24 +54,31 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all origins in production for now
+      callback(new Error('CORS: Origin not allowed'));
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400, // 24 hours
 }));
-app.use(morgan('dev'));
+
+// Logging
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cookieParser());
 
-// Stripe webhook needs raw body
+// Stripe webhook needs raw body (must be before JSON parser)
 app.use('/api/orders/webhook', express.raw({ type: 'application/json' }));
 
-// Parse JSON
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Parse JSON with size limit
+app.use(express.json({ limit: '10kb' })); // Reduced from 10mb
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -11,26 +11,35 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
 
   if (req.headers.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
-  } else if (req.cookies?.token) {
-    token = req.cookies.token;
+  } else if (req.cookies?.accessToken) {
+    token = req.cookies.accessToken;
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    res.status(401).json({ message: 'Not authorized, no token provided' });
     return;
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET not configured');
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as { id: string };
     const user = await User.findById(decoded.id).select('-password');
     if (!user) {
-      res.status(401).json({ message: 'Not authorized, user not found' });
+      res.status(401).json({ message: 'User not found' });
       return;
     }
     req.user = user;
     next();
-  } catch (error) {
-    res.status(401).json({ message: 'Not authorized, token invalid' });
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      res.status(401).json({ message: 'Token expired' });
+    } else if (error.name === 'JsonWebTokenError') {
+      res.status(401).json({ message: 'Invalid token' });
+    } else {
+      res.status(401).json({ message: 'Not authorized' });
+    }
   }
 };
 

@@ -1,12 +1,16 @@
 import { Router } from 'express';
 import { register, login, logout, getProfile, updateProfile, getUsers, deleteUser } from '../controllers/authController';
 import { protect, admin } from '../middleware/auth';
+import { loginLimiter, registerLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
-router.post('/register', register);
-router.post('/login', login);
-router.post('/logout', logout);
+// Rate limit auth endpoints
+router.post('/register', registerLimiter, register);
+router.post('/login', loginLimiter, login);
+router.post('/logout', protect, logout);
+
+// Protected routes
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 

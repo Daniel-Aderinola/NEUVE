@@ -8,9 +8,10 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  register: (name: string, email: string, password: string, confirmPassword: string) => Promise<void>;
+  logout: () => Promise<void>;
   updateUser: (data: any) => Promise<void>;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,59 +20,82 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // On mount, verify user session with backend
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      const token = localStorage.getItem('token');
-      if (storedUser && token) {
-        const parsed = JSON.parse(storedUser);
-        if (parsed && parsed._id && parsed.email) {
-          setUser(parsed);
-        } else {
-          // Invalid stored data — clean up
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
+    const verifySession = async () => {
+      try {
+        // Try to fetch profile - if it fails, user is not authenticated
+        const { data } = await authAPI.getProfile();
+        if (data && data._id && data.email) {
+          setUser(data);
         }
+      } catch (error: any) {
+        // 401 or other error means user is not authenticated
+        // Cookies will be cleared by server if expired
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      // Corrupted localStorage data — clean up
-      console.error('Error reading auth from localStorage:', e);
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-    }
-    setLoading(false);
+    };
+
+    verifySession();
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { data } = await authAPI.login({ email, password });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data));
-    setUser(data);
+    try {
+      const { data } = await authAPI.login({ email, password });
+      // httpOnly cookie is set automatically by server
+      // Only store user data in state (not in localStorage)
+      setUser(data);
+    } catch (error: any) {
+      setUser(null);
+      throw error;
+    }
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    const { data } = await authAPI.register({ name, email, password });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data));
-    setUser(data);
+  const register = async (name: string, email: string, password: string, confirmPassword: string) => {
+    try {
+      if (password !== confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+      const { data } = await authAPI.register({ name, email, password, confirmPassword });
+      // httpOnly cookie is set automatically by server
+      // Only store user data in state (not in localStorage)
+      setUser(data);
+    } catch (error: any) {
+      setUser(null);
+      throw error;
+    }
   };
 
-  const logout = () => {
-    authAPI.logout().catch(() => {});
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      // Server will clear httpOnly cookies
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local state
+      setUser(null);
+    }
   };
 
   const updateUser = async (formData: any) => {
-    const { data } = await authAPI.updateProfile(formData);
-    const updatedUser = { ...user, ...data };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    setUser(updatedUser);
+    try {
+      const { data } = await authAPI.updateProfile(formData);
+      const updatedUser = { ...user, ...data };
+      // Only update state, not localStorage
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Update user error:', error);
+      throw error;
+    }
   };
 
+  const isAuthenticated = user !== null && !loading;
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
