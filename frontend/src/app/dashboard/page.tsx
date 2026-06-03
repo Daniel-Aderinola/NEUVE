@@ -43,7 +43,7 @@ export default function DashboardPage() {
       country: user.address?.country || '',
     });
 
-    const fetchOrders = async () => {
+    const fetchOrders = async (): Promise<void> => {
       try {
         const { data } = await orderAPI.getMyOrders();
         setOrders(data);
